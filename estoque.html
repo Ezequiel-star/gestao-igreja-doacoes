@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saldo de Estoque - Igreja Gestão</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('imagen/cruz 2.jpg') no-repeat;
+            background-size: cover; background-position: center; padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, .5);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            width: 100%;
+            max-width: 900px;
+            color: #fff;
+            box-shadow: 0 0 30px rgba(0, 0, 0, .5);
+        }
+
+        h2 { text-align: center; margin-bottom: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+
+        .table-container { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; color: #fff; }
+
+        th { 
+            background: rgba(255, 255, 255, 0.2); 
+            padding: 15px; 
+            text-align: left; 
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        tr:hover { background: rgba(255, 255, 255, 0.05); }
+
+        .saldo-positivo { color: #87ffad; font-weight: 600; }
+        .saldo-vazio { color: #ff9b9b; }
+
+        .btn-voltar {
+            display: inline-block; margin-top: 25px; color: #fff; text-decoration: none;
+            font-weight: 500; border: 1px solid #fff; padding: 8px 20px; border-radius: 5px;
+            transition: 0.3s;
+        }
+        .btn-voltar:hover { background: #fff; color: #162938; }
+
+        .loading-msg { text-align: center; padding: 20px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>📦 Saldo Atual do Almoxarifado</h2>
+        
+        <div class="table-container">
+            <table id="tabelaSaldo">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Total Entradas</th>
+                        <th>Total Saídas</th>
+                        <th>Saldo Disponível</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4" class="loading-msg">Carregando dados do estoque...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <a href="menuprincipal.html" class="btn-voltar">⬅ Voltar ao Menu</a>
+    </div>
+
+    <script>
+        async function carregarSaldo() {
+            // Verifica o token nos formatos comuns
+            const token = localStorage.getItem('token') || localStorage.getItem('jwtToken');
+            const corpo = document.querySelector('#tabelaSaldo tbody');
+            
+            if (!token) {
+                alert("Sessão expirada. Por favor, faça login novamente.");
+                window.location.href = "login3.html";
+                return;
+            }
+
+            try {
+                // ROTA CORRIGIDA PARA BATER COM O APPROUTES.JS
+                // Antes estava '/api/doacao/saldo', o correto é '/api/estoque/saldo'
+                const res = await fetch('http://localhost:3000/api/estoque/saldo', {
+                    method: 'GET',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const dados = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(dados.erro || "Erro ao buscar dados");
+                }
+
+                if (dados.length === 0) {
+                    corpo.innerHTML = `<tr><td colspan="4" style="text-align:center;">Nenhum item encontrado no estoque.</td></tr>`;
+                    return;
+                }
+
+                // Renderiza as linhas mapeando os campos do seu SQL Service
+                corpo.innerHTML = dados.map(item => {
+                    const saldo = item.saldo_atual || 0;
+                    return `
+                        <tr>
+                            <td>${item.tipo_item}</td>
+                            <td>${item.total_entrada || 0}</td>
+                            <td>${item.total_saida || 0}</td>
+                            <td class="${saldo > 0 ? 'saldo-positivo' : 'saldo-vazio'}">
+                                <strong>${saldo}</strong>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error("Erro na requisição:", err);
+                corpo.innerHTML = `<tr><td colspan="4" style="text-align:center; color: #ff4d4d;">⚠️ Erro ao carregar estoque. Verifique se o servidor está rodando.</td></tr>`;
+            }
+        }
+
+        // Inicia a carga de dados ao abrir a página
+        window.onload = carregarSaldo;
+    </script>
+</body>
+</html>

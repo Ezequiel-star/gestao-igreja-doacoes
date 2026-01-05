@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Igreja Gestão</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('imagen/cruz 2.jpg') no-repeat;
+            background-size: cover; background-position: center; padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, .5);
+            border-radius: 20px; backdrop-filter: blur(15px); padding: 40px;
+            width: 100%; max-width: 500px; color: #fff; text-align: center;
+            box-shadow: 0 0 30px rgba(0, 0, 0, .5);
+        }
+
+        h2 { margin-bottom: 5px; font-weight: 600; }
+        .badge-acesso {
+            display: inline-block; padding: 5px 15px; background: rgba(135, 255, 173, 0.2);
+            color: #87ffad; border-radius: 20px; font-size: 0.8em; margin-bottom: 20px;
+        }
+
+        .menu-grid { display: flex; flex-direction: column; gap: 12px; }
+
+        .btn {
+            width: 100%; height: 48px; background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; text-decoration: none; font-weight: 500; transition: 0.3s;
+            gap: 12px;
+        }
+
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+
+        /* Destaques visuais para os módulos */
+        .btn-entrega { border-left: 5px solid #ffcc00; } 
+        .btn-historico { border-left: 5px solid #2196F3; } 
+        .btn-estoque { background: rgba(40, 167, 69, 0.2); border-left: 5px solid #28a745; }
+        .btn-sair { background: rgba(220, 53, 69, 0.2); margin-top: 10px; border: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>⛪ Painel Administrativo</h2>
+        <div class="badge-acesso">Acesso: Voluntário</div>
+        <p style="margin-bottom: 25px; font-size: 0.9em;">Bem-vindo ao sistema de gestão social.</p>
+        
+        <div class="menu-grid">
+            <a href="consultar.html" class="btn">👥 Gerenciar Famílias</a>
+            <a href="doacao.html" class="btn">🎁 Registrar Doações</a>
+            <a href="entregas.html" class="btn btn-entrega">🚚 Realizar Entregas</a>
+            
+            <a href="historico.html" class="btn btn-historico">📜 Histórico de Assistência</a>
+            
+            <a href="estoque.html" class="btn btn-estoque">📦 Saldo do Estoque</a>
+            <a href="#" onclick="logout()" class="btn btn-sair">Sair do Sistema</a>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('jwtToken');
+            window.location.href = 'login3.html';
+        }
+
+        // Bloqueia acesso se não estiver logado (Segurança JWT)
+        if (!localStorage.getItem('jwtToken')) {
+            window.location.href = 'login3.html';
+        }
+    </script>
+</body>
+</html>

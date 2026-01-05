@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realizar Entregas - Igreja Gestão</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('imagen/cruz 2.jpg') no-repeat;
+            background-size: cover; background-position: center; padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, .5);
+            border-radius: 20px; backdrop-filter: blur(15px); padding: 40px;
+            width: 100%; max-width: 500px; color: #fff; box-shadow: 0 0 30px rgba(0, 0, 0, .5);
+        }
+
+        h2 { text-align: center; margin-bottom: 30px; }
+
+        .input-box { position: relative; width: 100%; height: 50px; border-bottom: 2px solid #fff; margin: 35px 0; }
+        
+        .input-box label { 
+            position: absolute; top: 50%; left: 5px; transform: translateY(-50%); 
+            color: #fff; transition: .5s; pointer-events: none; font-size: 1em;
+        }
+
+        .input-box input:focus~label, 
+        .input-box input:valid~label,
+        .input-box select:focus~label,
+        .input-box select:valid~label { 
+            top: -12px; font-size: 0.85em; color: #87ffad;
+        }
+
+        .input-box input, .input-box select { 
+            width: 100%; height: 100%; background: transparent; border: none; 
+            outline: none; color: #fff; padding: 0 5px; font-size: 1em;
+        }
+
+        .input-box select option { background: #162938; color: #fff; }
+
+        .btn { 
+            width: 100%; height: 45px; background: #fff; border: none; 
+            border-radius: 6px; cursor: pointer; color: #162938; 
+            font-weight: 600; transition: .3s; margin-top: 10px;
+        }
+        .btn:hover { background: #e0e0e0; }
+
+        .alert-msg { margin-top: 15px; font-size: 0.85em; text-align: center; padding: 10px; border-radius: 4px; display: none; }
+        .alert-success { display: block; background: rgba(40, 167, 69, 0.4); color: #87ffad; border: 1px solid #28a745; }
+        .alert-error { display: block; background: rgba(220, 53, 69, 0.4); color: #ff9b9b; border: 1px solid #ff4d4d; }
+        
+        .btn-voltar { display: block; text-align: center; margin-top: 20px; color: #fff; text-decoration: none; font-size: 0.9em; opacity: 0.8; }
+        .btn-voltar:hover { opacity: 1; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🚚 Realizar Entrega</h2>
+        <form id="entregaForm">
+            <div class="input-box">
+                <input type="text" id="cpf_beneficiario" required>
+                <label>CPF do Beneficiário</label>
+            </div>
+
+            <div class="input-box">
+                <select id="id_doacao" required>
+                    <option value="" disabled selected>Carregando itens...</option>
+                </select>
+                <label>Item no Estoque</label>
+            </div>
+
+            <div class="input-box">
+                <input type="number" id="quantidade" required min="1">
+                <label>Quantidade</label>
+            </div>
+
+            <button type="submit" class="btn">Confirmar Entrega</button>
+            <div id="msgEntrega" class="alert-msg"></div>
+            <a href="menuprincipal.html" class="btn-voltar">⬅ Voltar ao Menu</a>
+        </form>
+    </div>
+
+    <script>
+        // 1. Verificação imediata do Token
+        const token = localStorage.getItem('jwtToken') || localStorage.getItem('token');
+        const msgDiv = document.getElementById('msgEntrega');
+
+        if (!token) {
+            alert("Sessão expirada. Faça login novamente.");
+            window.location.href = 'login3.html';
+        }
+
+        async function carregarEstoque() {
+            try {
+                const res = await fetch('http://localhost:3000/api/doacao/listar', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!res.ok) throw new Error("Erro ao buscar estoque");
+
+                const itens = await res.json();
+                const select = document.getElementById('id_doacao');
+                
+                select.innerHTML = '<option value="" disabled selected>Selecione um item</option>';
+                itens.forEach(item => {
+                    // Só mostra o que tem saldo
+                    if (item.quantidade > 0) {
+                        select.innerHTML += `<option value="${item.id_doacao}">${item.tipo_item} (Saldo: ${item.quantidade})</option>`;
+                    }
+                });
+            } catch (err) {
+                console.error("Erro ao carregar estoque:", err);
+                const select = document.getElementById('id_doacao');
+                select.innerHTML = '<option value="" disabled>Erro ao carregar estoque</option>';
+            }
+        }
+
+        document.getElementById('entregaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const dados = {
+                cpf_beneficiario: document.getElementById('cpf_beneficiario').value,
+                observacoes: "Entrega registrada via painel",
+                itens_entregues: [
+                    {
+                        id_doacao: parseInt(document.getElementById('id_doacao').value),
+                        quantidade_entregue: parseFloat(document.getElementById('quantidade').value)
+                    }
+                ]
+            };
+
+            try {
+                const res = await fetch('http://localhost:3000/api/entrega/registrar', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                const resultado = await res.json();
+
+                msgDiv.style.display = "block"; // Garante que a mensagem apareça
+
+                if (res.ok) {
+                    msgDiv.innerText = "✅ " + (resultado.mensagem || "Entrega realizada!");
+                    msgDiv.className = "alert-msg alert-success";
+                    document.getElementById('entregaForm').reset();
+                    carregarEstoque(); // Atualiza o saldo no select
+                } else {
+                    msgDiv.innerText = "❌ " + (resultado.erro || "Saldo insuficiente ou CPF não encontrado.");
+                    msgDiv.className = "alert-msg alert-error";
+                }
+            } catch (err) {
+                msgDiv.style.display = "block";
+                msgDiv.innerText = "⚠️ Erro de conexão com o servidor.";
+                msgDiv.className = "alert-msg alert-error";
+            }
+
+            setTimeout(() => { msgDiv.style.display = 'none'; }, 6000);
+        });
+
+        window.onload = carregarEstoque;
+    </script>
+</body>
+</html>

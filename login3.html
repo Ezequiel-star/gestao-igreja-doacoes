@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Igreja Gestão - Acesso</title>
+    <link rel="stylesheet" href="pagina3.css">
+</head>
+<body>
+
+    <header>
+        <h2 class="logo">Igreja Gestão</h2>
+        <nav class="navigation">
+            <button class="btnLogin-popup">Entrar</button>
+        </nav>
+    </header>
+
+    <div class="wrapper">
+        <span class="icon-close">
+            <ion-icon name="close-outline"></ion-icon>
+        </span>
+
+        <div class="form-box login">
+            <h2>Acessar</h2>
+            <form id="loginForm">
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" id="loginEmail" required>
+                    <label>E-mail</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                    <span class="icon-eye" id="toggleLoginPass">
+                        <ion-icon name="eye-outline"></ion-icon>
+                    </span>
+                    <input type="password" id="loginPassword" required>
+                    <label>Senha</label>
+                </div>
+                <div class="remember-forgot">
+                    <label><input type="checkbox"> Lembrar-me</label>
+                    <a href="#" class="forgot-link">Esqueceu a senha?</a>
+                </div>
+                <button type="submit" class="btn">Login</button>
+                
+                <div id="msgLogin" class="alert-msg"></div>
+
+                <div class="login-register">
+                    <p>Não tem conta? <a href="#" class="register-link">Cadastre-se</a></p>
+                </div>
+            </form>
+        </div>
+
+        <div class="form-box register">
+            <h2>Cadastro</h2>
+            <form id="registerForm">
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="person"></ion-icon></span>
+                    <input type="text" id="regUsername" required>
+                    <label>Nome Completo</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" id="regEmail" required>
+                    <label>E-mail</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                    <span class="icon-eye" id="toggleRegPass">
+                        <ion-icon name="eye-outline"></ion-icon>
+                    </span>
+                    <input type="password" id="regPassword" required>
+                    <label>Senha</label>
+                </div>
+                <div class="remember-forgot">
+                    <label><input type="checkbox" required> Aceito os termos</label>
+                </div>
+                <button type="submit" class="btn">Registrar</button>
+                <div id="msgReg" class="alert-msg"></div>
+                <div class="login-register">
+                    <p>Já possui conta? <a href="#" class="login-link">Fazer Login</a></p>
+                </div>
+            </form>
+        </div>
+
+        <div class="form-box forgot">
+            <h2>Recuperar</h2>
+            <form id="forgotForm">
+                <p style="color: #fff; font-size: 0.85em; text-align: center; margin-bottom: 15px;">
+                    Insira o seu e-mail para recuperar o acesso.
+                </p>
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" id="forgotEmail" required>
+                    <label>E-mail cadastrado</label>
+                </div>
+                <button type="submit" class="btn">Enviar Instruções</button>
+                <div id="msgForgot" class="alert-msg"></div>
+                <div class="login-register">
+                    <p><a href="#" class="back-to-login">Voltar ao Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <script src="javascriptlogin.js"></script>
+    
+    <script>
+        // Função para alternar visibilidade da senha
+        function setupToggle(buttonId, inputId) {
+            const btn = document.getElementById(buttonId);
+            const input = document.getElementById(inputId);
+            if(btn && input) {
+                btn.addEventListener('click', () => {
+                    const type = input.type === 'password' ? 'text' : 'password';
+                    input.type = type;
+                    btn.children[0].setAttribute('name', type === 'password' ? 'eye-outline' : 'eye-off-outline');
+                });
+            }
+        }
+        setupToggle('toggleLoginPass', 'loginPassword');
+        setupToggle('toggleRegPass', 'regPassword');
+    </script>
+</body>
+</html>
