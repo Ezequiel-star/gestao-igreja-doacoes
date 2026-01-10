@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Famílias - Igreja Gestão</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('imagen/cruz 2.jpg') no-repeat;
+            background-size: cover; background-position: center; padding: 20px; color: #fff;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px; backdrop-filter: blur(15px); padding: 40px; width: 100%; max-width: 1100px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-actions { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; 
+        }
+
+        .btn-add { 
+            background: #87ffad; color: #162938; padding: 12px 25px; border: none; 
+            border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase; 
+            font-size: 0.85em; transition: 0.3s; 
+        }
+
+        .btn-add:hover { background: #fff; transform: scale(1.05); }
+
+        .form-cadastro { 
+            background: rgba(0,0,0,0.4); padding: 25px; border-radius: 15px; 
+            margin-bottom: 30px; border: 1px solid #87ffad; display: none; 
+            animation: fadeIn 0.5s ease; 
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 15px; margin-bottom: 20px; 
+        }
+
+        input, select { 
+            padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); 
+            background: rgba(0,0,0,0.3); color: #fff; outline: none; 
+        }
+
+        input:focus { border-color: #87ffad; }
+        select option { background-color: #162938; color: #fff; }
+
+        .table-container { 
+            overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 15px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+        }
+
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { background: rgba(255, 255, 255, 0.1); padding: 15px; text-align: left; color: #87ffad; font-size: 0.9em; text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        .btn-edit { background: #ffc107; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; }
+        .btn-del { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+        .btn-voltar { display: inline-block; margin-top: 30px; color: #ccc; text-decoration: none; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-actions">
+            <h2>👥 Gestão de Famílias</h2>
+            <button class="btn-add" onclick="toggleForm()">+ Novo Beneficiário</button>
+        </div>
+
+        <div id="areaForm" class="form-cadastro">
+            <h3 id="formTitle" style="margin-bottom: 20px; color: #87ffad;">Cadastrar Nova Família</h3>
+            <div class="form-grid">
+                <input type="text" id="nome" placeholder="Nome do Responsável">
+                <input type="text" id="cpf" placeholder="CPF (Apenas números)">
+                <input type="text" id="endereco" placeholder="Endereço">
+                <input type="text" id="telefone" placeholder="Telefone">
+                <input type="number" id="qtd_membros" value="1" min="1">
+                <select id="status">
+                    <option value="Ativo">Ativo</option>
+                    <option value="Aguardando Triagem">Aguardando Triagem</option>
+                </select>
+            </div>
+            <button onclick="salvar()" style="padding: 12px 25px; background: #87ffad; color: #162938; border:none; border-radius:8px; font-weight:700; cursor:pointer;">
+                CONFIRMAR NO BANCO
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Membros</th><th>Status</th><th>Ações</th></tr>
+                </thead>
+                <tbody id="tabelaCorpo"></tbody>
+            </table>
+        </div>
+        <a href="menuprincipal.html" class="btn-voltar">← Voltar ao Menu</a>
+    </div>
+
+    <script>
+        // Pegando o token de segurança
+        const token = localStorage.getItem('token') || localStorage.getItem('jwtToken');
+
+        function toggleForm() {
+            const f = document.getElementById('areaForm');
+            f.style.display = (f.style.display === 'none' || f.style.display === '') ? 'block' : 'none';
+        }
+
+        // CARREGAR: Adicionado o /api/ no fetch
+        async function carregar() {
+            try {
+                const res = await fetch('http://localhost:3000/api/beneficiario/listar', { 
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const dados = await res.json();
+                const corpo = document.getElementById('tabelaCorpo');
+                corpo.innerHTML = "";
+                
+                dados.forEach(f => {
+                    corpo.innerHTML += `<tr>
+                        <td>${f.nome_responsavel}</td>
+                        <td>${f.cpf_responsavel}</td>
+                        <td>${f.telefone || '-'}</td>
+                        <td>${f.qtd_membros}</td>
+                        <td>${f.status}</td>
+                        <td>
+                            <button class="btn-edit" onclick="prepararEdicao('${f.cpf_responsavel}')">✏️</button>
+                            <button class="btn-del" onclick="excluir('${f.cpf_responsavel}')">🗑️</button>
+                        </td>
+                    </tr>`;
+                });
+            } catch (e) { 
+                console.error("Erro ao buscar dados:", e); 
+            }
+        }
+
+        // SALVAR: Adicionado o /api/ no fetch
+        async function salvar() {
+            const nomeVal = document.getElementById('nome').value;
+            const cpfVal = document.getElementById('cpf').value;
+
+            if (!nomeVal || !cpfVal) {
+                alert("Nome e CPF são necessários!");
+                return;
+            }
+
+            const dados = {
+                nome_responsavel: nomeVal,
+                cpf_responsavel: cpfVal,
+                endereco: document.getElementById('endereco').value,
+                telefone: document.getElementById('telefone').value,
+                qtd_membros: parseInt(document.getElementById('qtd_membros').value) || 1,
+                status: document.getElementById('status').value
+            };
+
+            try {
+                const res = await fetch('http://localhost:3000/api/beneficiario/registrar', {
+                    method: 'POST', 
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                if (res.ok) {
+                    alert("✅ Salvo com sucesso na Aiven!");
+                    location.reload();
+                } else {
+                    const erro = await res.json();
+                    alert("❌ Erro: " + (erro.message || "Falha ao salvar."));
+                }
+            } catch (e) { 
+                alert("Erro de conexão. Verifique se o servidor está rodando.");
+            }
+        }
+
+        window.onload = carregar;
+    </script>
+</body>
+</html>

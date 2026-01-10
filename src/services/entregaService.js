@@ -26,19 +26,23 @@ async function listarEntregas() {
 async function registrarEntrega(dados, idVoluntarioLogado) {
     const connection = await pool.getConnection();
     try {
+        // Validação para evitar o erro de "undefined reading 0"
+        if (!dados.itens_entregues || !dados.itens_entregues[0]) {
+            throw new Error("Nenhum item foi enviado para a entrega.");
+        }
+
         await connection.beginTransaction();
 
-        // Usa o ID logado ou o ID 1 padrão para evitar o erro de campo vazio no MySQL
         const voluntarioId = idVoluntarioLogado || 1;
 
-        // 1. Grava na tabela ENTREGA (Resolvendo o erro de id_voluntario)
+        // 1. Grava na tabela ENTREGA
         const [resEntrega] = await connection.execute(
             'INSERT INTO ENTREGA (cpf_beneficiario, data_entrega, id_voluntario) VALUES (?, CURDATE(), ?)',
             [dados.cpf_beneficiario, voluntarioId]
         );
         
         const idEntrega = resEntrega.insertId;
-        const item = dados.itens_entregues[0];
+        const item = dados.itens_entregues[0]; // Agora com validação acima
 
         // 2. Grava na tabela ITEM_ENTREGUE
         await connection.execute(
@@ -46,7 +50,7 @@ async function registrarEntrega(dados, idVoluntarioLogado) {
             [idEntrega, item.id_doacao, item.quantidade_entregue]
         );
 
-        // 3. Baixa automática no estoque
+        // 3. Baixa automática no estoque (O UPDATE que você precisava)
         await connection.execute(
             'UPDATE DOACAO SET quantidade = quantidade - ? WHERE id_doacao = ?',
             [item.quantidade_entregue, item.id_doacao]
@@ -55,11 +59,11 @@ async function registrarEntrega(dados, idVoluntarioLogado) {
         await connection.commit();
         return { sucesso: true };
     } catch (error) {
-        await connection.rollback();
+        if (connection) await connection.rollback();
         console.error("ERRO NO BANCO:", error.message);
         throw error;
     } finally {
-        connection.release();
+        if (connection) connection.release();
     }
 }
 

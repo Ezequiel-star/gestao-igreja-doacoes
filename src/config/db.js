@@ -1,37 +1,33 @@
-
-// src/config/db.js (CORREÇÃO E TESTE DE CONEXÃO)
-
+require('dotenv').config(); // Carrega as variáveis do seu arquivo .env
 const mysql = require('mysql2/promise');
 
-// 1. Defina suas credenciais de acesso
+// 1. Configuração que lê os dados do seu arquivo .env
 const dbConfig = {
-    host: "127.0.0.1",
-    user: "root",
-    // **SUA SENHA CORRETA AQUI** (Mesma que funciona no Workbench)
-    password: "12345678", 
-    database: "igreja", 
-    port: 3306,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
+    connectTimeout: 60000,
+    ssl: {
+        rejectUnauthorized: false // Obrigatório para conectar na Aiven
+    }
 };
 
 // 2. Criação do Pool de Conexões
 const pool = mysql.createPool(dbConfig);
 
-// 3. TESTE DE CONEXÃO: Tenta pegar uma conexão e retorna (se falhar, o erro aparecerá)
+// 3. Teste automático de conexão para te ajudar no terminal
 pool.getConnection()
     .then(connection => {
-        console.log("✅ Conexão com o MySQL estabelecida com sucesso!");
-        connection.release(); // Libera a conexão
+        console.log("✅ CONECTADO COM SUCESSO À AIVEN!");
+        connection.release();
     })
     .catch(error => {
-        // Se a senha estiver errada, o erro aparecerá AQUI no terminal:
-        console.error("❌ ERRO FATAL AO CONECTAR COM O MYSQL:", error.message);
-        // Garante que o Node não continue rodando com uma conexão quebrada
-        process.exit(1); 
+        console.error("❌ ERRO NA CONEXÃO:", error.message);
     });
 
-
-// 4. Exporta o pool para ser usado nos Services
 module.exports = pool;

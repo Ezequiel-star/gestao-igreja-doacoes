@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Doação - Igreja Gestão</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('imagen/cruz 2.jpg') no-repeat;
+            background-size: cover; background-position: center; padding: 20px; color: #fff;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px; backdrop-filter: blur(15px); padding: 40px; 
+            width: 100%; max-width: 500px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 { margin-bottom: 20px; color: #87ffad; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9em; color: #ccc; }
+
+        input, select {
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(0, 0, 0, 0.4); color: #fff; outline: none; transition: 0.3s;
+        }
+
+        select option { background-color: #162938; color: #fff; padding: 10px; }
+        input:focus, select:focus { border-color: #87ffad; background: rgba(0, 0, 0, 0.6); }
+
+        .btn-enviar {
+            width: 100%; padding: 15px; background: #87ffad; color: #162938; 
+            border: none; border-radius: 10px; font-weight: 700; cursor: pointer; 
+            text-transform: uppercase; transition: 0.3s; margin-top: 10px;
+        }
+        .btn-enviar:hover { background: #fff; transform: scale(1.02); }
+        .btn-voltar { display: block; text-align: center; margin-top: 20px; color: #ccc; text-decoration: none; font-size: 0.9em; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🎁 Nova Doação</h2>
+        
+        <div class="form-group">
+            <label>Origem / Doador</label>
+            <input type="text" id="origem" placeholder="Ex: Mercado Central">
+        </div>
+
+        <div class="form-group">
+            <label>Tipo de Item</label>
+            <select id="tipo_item">
+                <option value="" disabled selected>Escolha o item...</option>
+                <option value="Cesta Básica">Cesta Básica</option>
+                <option value="Arroz (5kg)">Arroz (5kg)</option>
+                <option value="Feijão (1kg)">Feijão (1kg)</option>
+                <option value="Óleo">Óleo</option>
+                <option value="Açúcar">Açúcar</option>
+                <option value="Proteína">Proteína (Carne/Frango)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Quantidade</label>
+            <input type="number" id="quantidade" placeholder="Quantidade" value="1">
+        </div>
+
+        <div class="form-group">
+            <label>Data de Validade</label>
+            <input type="date" id="data_validade">
+        </div>
+
+        <button class="btn-enviar" onclick="enviarDoacao()">Confirmar no Banco</button>
+        <a href="menuprincipal.html" class="btn-voltar">← Voltar ao Menu</a>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token') || localStorage.getItem('jwtToken');
+
+        async function enviarDoacao() {
+            const dataVal = document.getElementById('data_validade').value;
+            
+            // Impede anos inválidos (como visto em testes anteriores)
+            if (dataVal && dataVal.split('-')[0].length > 4) {
+                alert("Por favor, insira um ano válido (Ex: 2026).");
+                return;
+            }
+
+            const dados = {
+                origem: document.getElementById('origem').value,
+                tipo_item: document.getElementById('tipo_item').value,
+                quantidade: parseInt(document.getElementById('quantidade').value),
+                data_validade: dataVal || null
+            };
+
+            if (!dados.origem || !dados.tipo_item) {
+                alert("Preencha o doador e o tipo de item!");
+                return;
+            }
+
+            try {
+                // ADICIONADO /api/ NA ROTA CONFORME SEU SERVER.JS
+                const res = await fetch('http://localhost:3000/api/doacao/registrar', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                if (res.ok) {
+                    alert("✅ Doação registrada com sucesso na Aiven!");
+                    window.location.href = "consultar_doacoes.html";
+                } else {
+                    const errorData = await res.json();
+                    alert("❌ Erro ao registrar: " + (errorData.message || "Verifique os dados."));
+                }
+            } catch (err) {
+                alert("Erro de conexão com o servidor local.");
+            }
+        }
+    </script>
+</body>
+</html>
