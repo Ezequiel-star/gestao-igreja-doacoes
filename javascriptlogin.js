@@ -71,24 +71,24 @@ function showAlert(elementId, message, type) {
 }
 
 // ----------------------------------------------------
-// 2. FUNÇÕES PRINCIPAIS (CONEXÃO COM API/BANCO)
+// 2. FUNÇÕES PRINCIPAIS (CONEXÃO COM API NO RENDER)
 // ----------------------------------------------------
 
+// Definimos a URL base do seu servidor no Render
+const API_URL = 'https://gestao-igreja-doacoes.onrender.com/api';
+
 async function fazerLogin(email, senha) {
-    // URL garantindo o prefixo /api que está no seu server.js
-    const url = 'http://localhost:3000/api/auth/login'; 
+    const url = `${API_URL}/auth/login`; 
     try {
         const resposta = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            // Enviando como seu backend espera receber
             body: JSON.stringify({ email, senhaPura: senha })
         });
 
         const dados = await resposta.json();
 
         if (resposta.ok) {
-            // Salva o Token para as próximas requisições (Doação, Entrega, etc)
             localStorage.setItem('jwtToken', dados.token);
             localStorage.setItem('nivelAcesso', dados.nivel);
             showAlert('msgLogin', '✅ Login realizado com sucesso!', 'success');
@@ -106,7 +106,7 @@ async function fazerLogin(email, senha) {
 }
 
 async function fazerCadastro(nome, email, senha) {
-    const url = 'http://localhost:3000/api/auth/register'; 
+    const url = `${API_URL}/auth/register`; 
     try {
         const resposta = await fetch(url, {
             method: 'POST',
@@ -123,6 +123,7 @@ async function fazerCadastro(nome, email, senha) {
             showAlert('msgReg', '❌ Erro: ' + dados.erro, 'error');
         }
     } catch (erro) {
+        console.error("Erro no cadastro:", erro);
         showAlert('msgReg', '⚠️ Erro ao conectar ao servidor.', 'error');
     }
 }
