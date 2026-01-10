@@ -1,7 +1,7 @@
 require('dotenv').config(); // Carrega as variáveis do seu arquivo .env
 const mysql = require('mysql2/promise');
 
-// 1. Configuração que lê os dados do seu arquivo .env
+// 1. Configuração que lê os dados do seu arquivo .env para segurança
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -13,14 +13,14 @@ const dbConfig = {
     queueLimit: 0,
     connectTimeout: 60000,
     ssl: {
-        rejectUnauthorized: false // Obrigatório para conectar na Aiven
+        rejectUnauthorized: false // Obrigatório para a Aiven
     }
 };
 
 // 2. Criação do Pool de Conexões
 const pool = mysql.createPool(dbConfig);
 
-// 3. Teste automático de conexão para te ajudar no terminal
+// 3. Teste de conexão no terminal
 pool.getConnection()
     .then(connection => {
         console.log("✅ CONECTADO COM SUCESSO À AIVEN!");
