@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(3000, () => {
-    console.log(`🚀 SERVIDOR ATIVO EM: http://localhost:3000`);
+    console.log(`🚀 SERVIDOR ATIVO EM: https://gestao-igreja-doacoes.onrender.com`);
 });
 
 

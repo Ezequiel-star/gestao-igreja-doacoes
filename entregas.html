@@ -74,7 +74,7 @@
         // 1. CARREGAR FAMÍLIAS
         async function carregarFamilias() {
             try {
-                const res = await fetch('http://localhost:3000/api/beneficiario/listar', {
+                const res = await fetch('https://gestao-igreja-doacoes.onrender.com/api/beneficiario/listar', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const familias = await res.json();
@@ -89,7 +89,7 @@
         // 2. CARREGAR ITENS DO ESTOQUE
         async function carregarEstoque() {
             try {
-                const res = await fetch('http://localhost:3000/api/doacao/listar', {
+                const res = await fetch('https://gestao-igreja-doacoes.onrender.com/api/doacao/listar', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const itens = await res.json();
@@ -137,7 +137,7 @@
             };
 
             try {
-                const res = await fetch('http://localhost:3000/api/entrega/registrar', {
+                const res = await fetch('https://gestao-igreja-doacoes.onrender.com/api/entrega/registrar', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',

@@ -6,9 +6,9 @@ const backToLogin = document.querySelector('.back-to-login');
 const btnPopup = document.querySelector('.btnLogin-popup');
 const iconClose = document.querySelector('.icon-close');
 
-// DICA: Se estiver testando no PC, use 'http://localhost:3000/api' 
+// DICA: Se estiver testando no PC, use 'https://gestao-igreja-doacoes.onrender.com/api' 
 // Se for para publicar, use a do Render.
-const API_URL = 'http://localhost:3000/api'; 
+const API_URL = 'https://gestao-igreja-doacoes.onrender.com/api'; 
 
 // --- NAVEGAÇÃO ---
 if (registerLink) {
