@@ -17,7 +17,7 @@ async function confirmarEntrada(event) {
     };
 
     try {
-        const response = await fetch('http://localhost:3000/api/doacao/registrar', {
+        const response = await fetch('https://gestao-igreja-doacoes.onrender.com/api/doacao/registrar', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',

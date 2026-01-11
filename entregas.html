@@ -69,7 +69,7 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token') || localStorage.getItem('jwtToken');
+        const token = localStorage.getItem('jwtToken') || localStorage.getItem('token');
 
         // 1. CARREGAR FAMÍLIAS
         async function carregarFamilias() {
@@ -83,12 +83,10 @@
                 familias.forEach(f => {
                     select.innerHTML += `<option value="${f.cpf_responsavel}">${f.nome_responsavel}</option>`;
                 });
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error("Erro ao carregar famílias:", err); }
         }
 
-        // 2. CARREGAR ITENS DO ESTOQUE (Dinâmico)
+        // 2. CARREGAR ITENS DO ESTOQUE
         async function carregarEstoque() {
             try {
                 const res = await fetch('http://localhost:3000/api/doacao/listar', {
@@ -99,24 +97,35 @@
                 select.innerHTML = '<option value="">Escolha o item no estoque...</option>';
                 
                 itens.forEach(i => {
+                    // Só mostra se tiver saldo
                     if(i.quantidade > 0) {
-                        select.innerHTML += `<option value="${i.id_doacao}">${i.tipo_item} (Saldo: ${i.quantidade})</option>`;
+                        // Guardamos o saldo no atributo data-saldo para validar depois
+                        select.innerHTML += `<option value="${i.id_doacao}" data-saldo="${i.quantidade}">${i.tipo_item} (Disponível: ${i.quantidade})</option>`;
                     }
                 });
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error("Erro ao carregar estoque:", err); }
         }
 
-        // 3. CONFIRMAR ENTREGA (Enviando o objeto esperado pelo Service)
+        // 3. CONFIRMAR ENTREGA
         async function confirmarEntrega() {
+            const selectItem = document.getElementById('selectItemDoacao');
+            const optionSelecionada = selectItem.options[selectItem.selectedIndex];
+            
             const cpf = document.getElementById('selectFamilia').value;
-            const idDoacao = document.getElementById('selectItemDoacao').value;
+            const idDoacao = selectItem.value;
             const qtd = parseInt(document.getElementById('quantidade').value);
+            
+            // PEGA O SALDO QUE SALVAMOS NO DATA-ATTRIBUTE
+            const saldoDisponivel = parseInt(optionSelecionada.getAttribute('data-saldo'));
 
-            if (!cpf || !idDoacao) return alert("Selecione a família e o item!");
+            if (!cpf || !idDoacao) return alert("Por favor, selecione a família e o item!");
 
-            // Monta os dados exatamente como o Service espera (itens_entregues como array)
+            // VALIDAÇÃO DE ENGENHARIA: Impede entrega maior que o estoque
+            if (qtd > saldoDisponivel) {
+                alert(`❌ Erro: Estoque insuficiente! Você só possui ${saldoDisponivel} unidades deste item.`);
+                return;
+            }
+
             const payload = {
                 cpf_beneficiario: cpf,
                 itens_entregues: [
@@ -138,18 +147,17 @@
                 });
 
                 if (res.ok) {
-                    alert("✅ Entrega registrada e estoque atualizado!");
-                    window.location.href = "consultar_doacoes.html";
+                    alert("✅ Entrega registrada com sucesso! O estoque foi atualizado.");
+                    window.location.href = "menuprincipal.html";
                 } else {
                     const erro = await res.json();
-                    alert("❌ Erro: " + (erro.message || "Falha na entrega"));
+                    alert("❌ Falha: " + (erro.message || "Erro ao processar entrega no servidor."));
                 }
             } catch (err) {
-                alert("Erro de conexão com o servidor.");
+                alert("Erro crítico de conexão com o servidor.");
             }
         }
 
-        // Inicia as buscas ao carregar a página
         window.onload = () => {
             carregarFamilias();
             carregarEstoque();

@@ -88,8 +88,11 @@
                     <option value="Aguardando Triagem">Aguardando Triagem</option>
                 </select>
             </div>
-            <button onclick="salvar()" style="padding: 12px 25px; background: #87ffad; color: #162938; border:none; border-radius:8px; font-weight:700; cursor:pointer;">
+            <button onclick="salvar()" id="btnSalvar" style="padding: 12px 25px; background: #87ffad; color: #162938; border:none; border-radius:8px; font-weight:700; cursor:pointer;">
                 CONFIRMAR NO BANCO
+            </button>
+            <button onclick="limparForm(); toggleForm()" style="padding: 12px 25px; background: #ccc; color: #333; border:none; border-radius:8px; font-weight:700; cursor:pointer; margin-left: 10px;">
+                CANCELAR
             </button>
         </div>
 
@@ -105,18 +108,30 @@
     </div>
 
     <script>
-        // Pegando o token de segurança
-        const token = localStorage.getItem('token') || localStorage.getItem('jwtToken');
+        const token = localStorage.getItem('jwtToken');
+        const API_URL = 'http://localhost:3000/api/beneficiario';
+        let editandoCpf = null;
 
         function toggleForm() {
             const f = document.getElementById('areaForm');
             f.style.display = (f.style.display === 'none' || f.style.display === '') ? 'block' : 'none';
         }
 
-        // CARREGAR: Adicionado o /api/ no fetch
+        function limparForm() {
+            document.getElementById('nome').value = "";
+            document.getElementById('cpf').value = "";
+            document.getElementById('cpf').disabled = false;
+            document.getElementById('endereco').value = "";
+            document.getElementById('telefone').value = "";
+            document.getElementById('qtd_membros').value = "1";
+            document.getElementById('status').value = "Ativo";
+            document.getElementById('formTitle').innerText = "Cadastrar Nova Família";
+            editandoCpf = null;
+        }
+
         async function carregar() {
             try {
-                const res = await fetch('http://localhost:3000/api/beneficiario/listar', { 
+                const res = await fetch(`${API_URL}/listar`, { 
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const dados = await res.json();
@@ -131,55 +146,79 @@
                         <td>${f.qtd_membros}</td>
                         <td>${f.status}</td>
                         <td>
-                            <button class="btn-edit" onclick="prepararEdicao('${f.cpf_responsavel}')">✏️</button>
+                            <button class="btn-edit" onclick="prepararEdicao('${f.cpf_responsavel}', '${f.nome_responsavel}', '${f.endereco}', '${f.telefone}', ${f.qtd_membros}, '${f.status}')">✏️</button>
                             <button class="btn-del" onclick="excluir('${f.cpf_responsavel}')">🗑️</button>
                         </td>
                     </tr>`;
                 });
-            } catch (e) { 
-                console.error("Erro ao buscar dados:", e); 
-            }
+            } catch (e) { console.error("Erro ao carregar:", e); }
         }
 
-        // SALVAR: Adicionado o /api/ no fetch
+        function prepararEdicao(cpf, nome, endereco, telefone, membros, status) {
+            editandoCpf = cpf;
+            document.getElementById('nome').value = nome;
+            document.getElementById('cpf').value = cpf;
+            document.getElementById('cpf').disabled = true;
+            document.getElementById('endereco').value = endereco;
+            document.getElementById('telefone').value = telefone;
+            document.getElementById('qtd_membros').value = membros;
+            document.getElementById('status').value = status;
+            
+            document.getElementById('formTitle').innerText = "Editando Família";
+            document.getElementById('areaForm').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
         async function salvar() {
-            const nomeVal = document.getElementById('nome').value;
-            const cpfVal = document.getElementById('cpf').value;
-
-            if (!nomeVal || !cpfVal) {
-                alert("Nome e CPF são necessários!");
-                return;
-            }
-
             const dados = {
-                nome_responsavel: nomeVal,
-                cpf_responsavel: cpfVal,
+                nome_responsavel: document.getElementById('nome').value,
+                cpf_responsavel: document.getElementById('cpf').value,
                 endereco: document.getElementById('endereco').value,
                 telefone: document.getElementById('telefone').value,
-                qtd_membros: parseInt(document.getElementById('qtd_membros').value) || 1,
+                qtd_membros: parseInt(document.getElementById('qtd_membros').value),
                 status: document.getElementById('status').value
             };
 
+            const url = editandoCpf ? `${API_URL}/editar/${editandoCpf}` : `${API_URL}/registrar`;
+            const metodo = editandoCpf ? 'PUT' : 'POST';
+
             try {
-                const res = await fetch('http://localhost:3000/api/beneficiario/registrar', {
-                    method: 'POST', 
+                const res = await fetch(url, {
+                    method: metodo,
                     headers: { 
-                        'Content-Type': 'application/json', 
-                        'Authorization': `Bearer ${token}` 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(dados)
                 });
 
                 if (res.ok) {
-                    alert("✅ Salvo com sucesso na Aiven!");
+                    alert("✅ Salvo com sucesso!");
+                    limparForm();
                     location.reload();
                 } else {
                     const erro = await res.json();
-                    alert("❌ Erro: " + (erro.message || "Falha ao salvar."));
+                    alert("❌ Erro: " + (erro.erro || "Falha na operação"));
                 }
-            } catch (e) { 
-                alert("Erro de conexão. Verifique se o servidor está rodando.");
-            }
+            } catch (e) { alert("Erro de conexão."); }
+        }
+
+        async function excluir(cpf) {
+            if (!confirm(`Tem certeza que deseja excluir o CPF ${cpf}?`)) return;
+
+            try {
+                const res = await fetch(`${API_URL}/excluir/${cpf}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    alert("🗑️ Família excluída!");
+                    carregar();
+                } else {
+                    alert("❌ Não foi possível excluir.");
+                }
+            } catch (e) { alert("Erro ao conectar ao servidor."); }
         }
 
         window.onload = carregar;

@@ -1,33 +1,27 @@
-require('dotenv').config(); // Carrega as variáveis do seu arquivo .env
 const mysql = require('mysql2/promise');
+require('dotenv').config();
 
-// 1. Configuração que lê os dados do seu arquivo .env para segurança
-const dbConfig = {
+const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
+    port: process.env.DB_PORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 60000,
-    ssl: {
-        rejectUnauthorized: false // Obrigatório para a Aiven
-    }
-};
+    enableKeepAlive: true, // Mantém a conexão "viva" para evitar o ECONNRESET
+    keepAliveInitialDelay: 10000
+});
 
-// 2. Criação do Pool de Conexões
-const pool = mysql.createPool(dbConfig);
-
-// 3. Teste de conexão no terminal
+// Teste de conexão imediato
 pool.getConnection()
-    .then(connection => {
-        console.log("✅ CONECTADO COM SUCESSO À AIVEN!");
-        connection.release();
+    .then(conn => {
+        console.log("✅ BANCO DE DADOS CONECTADO COM SUCESSO!");
+        conn.release();
     })
-    .catch(error => {
-        console.error("❌ ERRO NA CONEXÃO:", error.message);
+    .catch(err => {
+        console.error("❌ ERRO AO CONECTAR NO BANCO:", err.message);
     });
 
 module.exports = pool;

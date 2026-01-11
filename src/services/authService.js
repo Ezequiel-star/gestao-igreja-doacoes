@@ -1,21 +1,25 @@
 const pool = require('../config/db'); 
 const jwt = require('jsonwebtoken');
-// Importe o bcrypt mesmo que não use agora, para evitar erros de referência
-const bcrypt = require('bcrypt'); 
+const bcrypt = require('bcryptjs'); 
 
+// Mantenha esta chave igual ao seu authMiddleware.js
 const JWT_SECRET = 'SUA_CHAVE_SECRETA_MUITO_FORTE'; 
 
 async function registerVoluntario(dados) {
     const { nome, email, senhaPura } = dados;
     try {
         const [existente] = await pool.execute(
-            'SELECT id_voluntario FROM voluntario WHERE email = ?', 
+            'SELECT id_voluntario FROM VOLUNTARIO WHERE email = ?', 
             [email]
         );
         if (existente.length > 0) return { error: "Este e-mail já está cadastrado." };
 
-        const query = 'INSERT INTO voluntario (nome, email, senha, nivel_acesso) VALUES (?, ?, ?, ?)';
-        const values = [nome, email, senhaPura, 'Comum']; 
+        // CRIPTOGRAFIA: Protegendo a senha antes de salvar na Aiven
+        const salt = await bcrypt.genSalt(10);
+        const senhaHash = await bcrypt.hash(senhaPura, salt);
+
+        const query = 'INSERT INTO VOLUNTARIO (nome, email, senha, nivel_acesso) VALUES (?, ?, ?, ?)';
+        const values = [nome, email, senhaHash, 'Comum']; 
 
         await pool.execute(query, values);
         return { sucesso: true };
@@ -27,9 +31,8 @@ async function registerVoluntario(dados) {
 
 async function authenticateVoluntario(email, senhaPura) {
     try {
-        // 1. Busca o usuário
         const [rows] = await pool.execute(
-            'SELECT id_voluntario, senha, nivel_acesso FROM voluntario WHERE email = ?', 
+            'SELECT id_voluntario, nome, senha, nivel_acesso FROM VOLUNTARIO WHERE email = ?', 
             [email]
         );
 
@@ -39,25 +42,30 @@ async function authenticateVoluntario(email, senhaPura) {
 
         const voluntario = rows[0];
 
-        // 2. Comparação (Garantindo que ambos sejam strings para evitar erro 401)
-        if (String(senhaPura) !== String(voluntario.senha)) {
-            console.log("⚠️ Senha não confere");
+        // COMPARAÇÃO SEGURA: Compara a senha digitada com o Hash do banco
+        const senhaValida = await bcrypt.compare(senhaPura, voluntario.senha);
+        
+        // Mantive a opção de texto puro apenas para não te travar caso já existam usuários sem hash
+        if (!senhaValida && senhaPura !== voluntario.senha) {
             return { error: 'Credenciais inválidas' };
         }
 
-        // 3. Geração do Token
+        // TOKEN: Agora com ID padronizado para o restante do sistema
         const token = jwt.sign(
-            { id_voluntario: voluntario.id_voluntario, nivel: voluntario.nivel_acesso },
+            { 
+                id: voluntario.id_voluntario, // Usando 'id' para bater com o controller
+                nome: voluntario.nome,
+                nivel: voluntario.nivel_acesso 
+            },
             JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '24h' } 
         );
 
-        console.log("✅ Login realizado com sucesso!");
-        return { token, nivel: voluntario.nivel_acesso };
+        console.log("✅ Login realizado com sucesso para:", email);
+        return { token, nivel: voluntario.nivel_acesso, nome: voluntario.nome };
 
     } catch (error) {
-        // ESTA LINHA VAI MOSTRAR O ERRO REAL NO SEU TERMINAL
-        console.error("❌ ERRO REAL NO LOGIN:", error); 
+        console.error("❌ ERRO NO LOGIN:", error); 
         return { error: "Erro interno no processo de login." };
     }
 }

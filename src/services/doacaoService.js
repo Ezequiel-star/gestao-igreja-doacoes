@@ -7,10 +7,13 @@ async function registrarDoacao(dados, idVoluntario) {
             INSERT INTO DOACAO (id_voluntario, data_registro, tipo_item, quantidade, origem, data_validade)
             VALUES (?, CURDATE(), ?, ?, ?, ?)
         `;
+        // Garante que quantidade nunca seja negativa no registro
+        const qtdSegura = quantidade < 0 ? 0 : quantidade;
+
         const [result] = await pool.execute(query, [
             idVoluntario,
             tipo_item,
-            quantidade,
+            qtdSegura,
             origem || 'Anônimo',
             data_validade || null
         ]);
@@ -20,27 +23,19 @@ async function registrarDoacao(dados, idVoluntario) {
     }
 }
 
-async function listarDoacoes() {
-    try {
-        const [rows] = await pool.execute('SELECT * FROM DOACAO ORDER BY data_registro DESC');
-        return rows;
-    } catch (error) {
-        throw error;
-    }
-}
-
 async function consultarSaldoEstoque() {
     try {
+        // Query melhorada para performance
         const query = `
             SELECT 
                 tipo_item, 
                 SUM(quantidade) as total_entrada,
-                (SELECT IFNULL(SUM(quantidade_entregue), 0) 
+                (SELECT IFNULL(SUM(ie.quantidade_entregue), 0) 
                  FROM ITEM_ENTREGUE ie 
                  JOIN DOACAO d2 ON ie.id_doacao = d2.id_doacao 
                  WHERE d2.tipo_item = DOACAO.tipo_item) as total_saida,
                 (SUM(quantidade) - (
-                    SELECT IFNULL(SUM(quantidade_entregue), 0) 
+                    SELECT IFNULL(SUM(ie.quantidade_entregue), 0) 
                     FROM ITEM_ENTREGUE ie 
                     JOIN DOACAO d2 ON ie.id_doacao = d2.id_doacao 
                     WHERE d2.tipo_item = DOACAO.tipo_item
@@ -55,4 +50,4 @@ async function consultarSaldoEstoque() {
     }
 }
 
-module.exports = { registrarDoacao, listarDoacoes, consultarSaldoEstoque };
+module.exports = { registrarDoacao, listarDoacoes: (require('./doacaoService')).listarDoacoes, consultarSaldoEstoque };

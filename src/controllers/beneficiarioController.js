@@ -21,21 +21,23 @@ async function registrarBeneficiarioController(req, res) {
 }
 
 async function editar(req, res) {
-    const { cpf } = req.params;
+    const { cpf } = req.params; // Captura o CPF da URL
     try {
         const resultado = await beneficiarioService.atualizarBeneficiario(cpf, req.body);
         return res.status(200).json(resultado);
     } catch (error) {
+        console.error("Erro ao editar:", error);
         return res.status(500).json({ erro: "Erro ao editar beneficiário." });
     }
 }
 
 async function excluir(req, res) {
-    const { cpf } = req.params;
+    const { cpf } = req.params; // Captura o CPF da URL
     try {
         const resultado = await beneficiarioService.deletarBeneficiario(cpf);
         return res.status(200).json(resultado);
     } catch (error) {
+        console.error("Erro ao excluir:", error);
         return res.status(500).json({ erro: "Erro ao excluir beneficiário." });
     }
 }

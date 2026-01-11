@@ -80,51 +80,67 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token') || localStorage.getItem('jwtToken');
+    // Tenta pegar o token de qualquer um dos dois nomes possíveis
+    const token = localStorage.getItem('jwtToken') || localStorage.getItem('token');
 
-        async function enviarDoacao() {
-            const dataVal = document.getElementById('data_validade').value;
-            
-            // Impede anos inválidos (como visto em testes anteriores)
-            if (dataVal && dataVal.split('-')[0].length > 4) {
-                alert("Por favor, insira um ano válido (Ex: 2026).");
-                return;
-            }
+    // PROTEÇÃO DE PÁGINA: Se não tiver token, nem deixa preencher
+    if (!token) {
+        alert("Acesso restrito! Por favor, faça login.");
+        window.location.href = "login3.html";
+    }
 
-            const dados = {
-                origem: document.getElementById('origem').value,
-                tipo_item: document.getElementById('tipo_item').value,
-                quantidade: parseInt(document.getElementById('quantidade').value),
-                data_validade: dataVal || null
-            };
-
-            if (!dados.origem || !dados.tipo_item) {
-                alert("Preencha o doador e o tipo de item!");
-                return;
-            }
-
-            try {
-                // ADICIONADO /api/ NA ROTA CONFORME SEU SERVER.JS
-                const res = await fetch('http://localhost:3000/api/doacao/registrar', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` 
-                    },
-                    body: JSON.stringify(dados)
-                });
-
-                if (res.ok) {
-                    alert("✅ Doação registrada com sucesso na Aiven!");
-                    window.location.href = "consultar_doacoes.html";
-                } else {
-                    const errorData = await res.json();
-                    alert("❌ Erro ao registrar: " + (errorData.message || "Verifique os dados."));
-                }
-            } catch (err) {
-                alert("Erro de conexão com o servidor local.");
-            }
+    async function enviarDoacao() {
+        const dataVal = document.getElementById('data_validade').value;
+        
+        // Validação de ano para evitar erros no SQL da Aiven
+        if (dataVal && dataVal.split('-')[0].length > 4) {
+            alert("Por favor, insira um ano válido.");
+            return;
         }
-    </script>
+
+        const dados = {
+            origem: document.getElementById('origem').value,
+            tipo_item: document.getElementById('tipo_item').value,
+            quantidade: parseInt(document.getElementById('quantidade').value),
+            data_validade: dataVal || null
+        };
+
+        if (!dados.origem || !dados.tipo_item) {
+            alert("Preencha o doador e o tipo de item!");
+            return;
+        }
+
+        try {
+            // Rota ajustada para o seu servidor local (Porta 3000)
+            const res = await fetch('http://localhost:3000/api/doacao/registrar', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify(dados)
+            });
+
+            const resultado = await res.json();
+
+            if (res.ok) {
+                alert("✅ Doação registrada com sucesso na Aiven!");
+                // Redireciona para a tela de histórico/consulta
+                window.location.href = "consultar_doacoes.html"; 
+            } else {
+                // Se o token for inválido ou expirado (401 ou 403)
+                if (res.status === 401 || res.status === 403) {
+                    alert("Sua sessão expirou. Faça login novamente.");
+                    window.location.href = "login3.html";
+                } else {
+                    alert("❌ Erro: " + (resultado.erro || "Erro ao registrar."));
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erro de conexão com o servidor local (Porta 3000). Verifique se o VS Code está rodando o Node.");
+        }
+    }
+</script>
 </body>
 </html>

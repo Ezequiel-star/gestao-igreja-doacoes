@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Senha - Ação Social</title>
+    <link rel="stylesheet" href="pagina3.css">
+    <style>
+        /* Ajustes para manter o padrão visual do Login */
+        .input-box .btn-eye {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #fff;
+            cursor: pointer;
+            font-size: 1.2em;
+            z-index: 2;
+        }
+        .input-box input { padding: 0 35px 0 35px !important; }
+        .alert-msg { margin-top: 15px; font-size: 0.9em; text-align: center; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <header>
+        <h2 class="logo">Ação Social</h2>
+    </header>
+
+    <div class="wrapper active-popup">
+        <div class="form-box login">
+            <h2>Nova Senha</h2>
+            <form id="resetForm">
+                <p style="text-align: center; color: white; font-size: 0.8em; margin-bottom: 10px;">
+                    Crie uma senha forte e fácil de lembrar.
+                </p>
+                
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" id="resetEmail" required>
+                    <label>Confirmar E-mail</label>
+                </div>
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                    <input type="password" id="novaSenha" required>
+                    <label>Nova Senha</label>
+                    <span class="btn-eye" onclick="toggleSenha()">
+                        <ion-icon name="eye-outline" id="eyeIcon"></ion-icon>
+                    </span>
+                </div>
+
+                <button type="submit" class="btn">Atualizar Senha</button>
+                <div id="msgReset" class="alert-msg"></div>
+                
+                <a href="login3.html" style="display: block; text-align: center; margin-top: 20px; color: #fff; text-decoration: none; font-weight: 600;">
+                    ← Voltar ao Login
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script>
+        // Pega o e-mail automaticamente da memória se o usuário veio do Login
+        const emailSalvo = sessionStorage.getItem('emailReset');
+        if (emailSalvo) {
+            document.getElementById('resetEmail').value = emailSalvo;
+        }
+
+        function toggleSenha() {
+            const input = document.getElementById('novaSenha');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('name', 'eye-off-outline');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('name', 'eye-outline');
+            }
+        }
+
+        document.getElementById('resetForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const msgReset = document.getElementById('msgReset');
+            const email = document.getElementById('resetEmail').value;
+            const novaSenha = document.getElementById('novaSenha').value;
+
+            try {
+                const res = await fetch('http://localhost:3000/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, novaSenha })
+                });
+
+                const dados = await res.json();
+
+                if (res.ok) {
+                    msgReset.style.color = "#87ffad";
+                    msgReset.innerHTML = "✅ Senha alterada! Redirecionando...";
+                    sessionStorage.removeItem('emailReset'); // Limpa a memória
+                    setTimeout(() => location.href = "login3.html", 2000);
+                } else {
+                    msgReset.style.color = "#ff4d4d";
+                    msgReset.innerHTML = "❌ " + (dados.erro || "Erro ao atualizar");
+                }
+            } catch (err) {
+                msgReset.style.color = "#ff4d4d";
+                msgReset.innerHTML = "❌ Erro: Servidor Offline";
+            }
+        };
+    </script>
+</body>
+</html>

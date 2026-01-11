@@ -1,6 +1,3 @@
-// ----------------------------------------------------
-// 0. VARIÁVEIS DE CONTROLE DE UI (POP-UP E NAVEGAÇÃO)
-// ----------------------------------------------------
 const wrapper = document.querySelector('.wrapper');
 const loginLink = document.querySelector('.login-link');
 const registerLink = document.querySelector('.register-link');
@@ -9,148 +6,139 @@ const backToLogin = document.querySelector('.back-to-login');
 const btnPopup = document.querySelector('.btnLogin-popup');
 const iconClose = document.querySelector('.icon-close');
 
-// --- NAVEGAÇÃO ENTRE TELAS ---
+// DICA: Se estiver testando no PC, use 'http://localhost:3000/api' 
+// Se for para publicar, use a do Render.
+const API_URL = 'http://localhost:3000/api'; 
+
+// --- NAVEGAÇÃO ---
 if (registerLink) {
-    registerLink.addEventListener('click', () => {
+    registerLink.onclick = () => {
         wrapper.classList.remove('active-forgot');
         wrapper.classList.add('active');
-    });
+    };
 }
-
 if (loginLink) {
-    loginLink.addEventListener('click', () => {
-        wrapper.classList.remove('active');
-    });
+    loginLink.onclick = () => wrapper.classList.remove('active');
 }
-
 if (forgotLink) {
-    forgotLink.addEventListener('click', (e) => {
+    forgotLink.onclick = (e) => {
         e.preventDefault();
         wrapper.classList.remove('active');
         wrapper.classList.add('active-forgot');
-    });
+    };
 }
-
 if (backToLogin) {
-    backToLogin.addEventListener('click', (e) => {
+    backToLogin.onclick = (e) => {
         e.preventDefault();
         wrapper.classList.remove('active-forgot');
-    });
+    };
 }
-
 if (btnPopup) {
-    btnPopup.addEventListener('click', () => {
-        wrapper.classList.add('active-popup');
-    });
+    btnPopup.onclick = () => wrapper.classList.add('active-popup');
 }
-
 if (iconClose) {
-    iconClose.addEventListener('click', () => {
+    iconClose.onclick = () => {
         wrapper.classList.remove('active-popup');
         setTimeout(() => {
             wrapper.classList.remove('active');
             wrapper.classList.remove('active-forgot');
         }, 500);
-    });
+    };
 }
 
-// ----------------------------------------------------
-// 1. FUNÇÕES DE UTILIDADE (ALERTAS)
-// ----------------------------------------------------
-
+// --- FUNÇÕES DE ALERTA ---
 function showAlert(elementId, message, type) {
     const alertDiv = document.getElementById(elementId);
     if (!alertDiv) return;
-    
     alertDiv.innerText = message;
     alertDiv.className = 'alert-msg ' + (type === 'success' ? 'alert-success' : 'alert-error');
     
-    setTimeout(() => {
+    // Remove o alerta após 4 segundos
+    setTimeout(() => { 
         alertDiv.className = 'alert-msg'; 
+        alertDiv.innerText = '';
     }, 4000);
 }
 
-// ----------------------------------------------------
-// 2. FUNÇÕES PRINCIPAIS (CONEXÃO COM API NO RENDER)
-// ----------------------------------------------------
-
-// Definimos a URL base do seu servidor no Render
-const API_URL = 'https://gestao-igreja-doacoes.onrender.com/api';
+// --- CHAMADAS À API ---
 
 async function fazerLogin(email, senha) {
-    const url = `${API_URL}/auth/login`; 
     try {
-        const resposta = await fetch(url, {
+        const res = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, senhaPura: senha })
         });
-
-        const dados = await resposta.json();
-
-        if (resposta.ok) {
+        const dados = await res.json();
+        if (res.ok) {
             localStorage.setItem('jwtToken', dados.token);
-            localStorage.setItem('nivelAcesso', dados.nivel);
-            showAlert('msgLogin', '✅ Login realizado com sucesso!', 'success');
-            
-            setTimeout(() => {
-                window.location.href = 'menuprincipal.html'; 
-            }, 1000);
+            showAlert('msgLogin', '✅ Login realizado!', 'success');
+            setTimeout(() => { window.location.href = 'menuprincipal.html'; }, 1000);
         } else {
-            showAlert('msgLogin', '❌ ' + (dados.erro || 'E-mail ou senha incorretos.'), 'error');
+            showAlert('msgLogin', '❌ ' + (dados.erro || 'Erro no login.'), 'error');
         }
-    } catch (erro) {
-        console.error("Erro na requisição:", erro);
-        showAlert('msgLogin', '⚠️ Erro ao conectar ao servidor.', 'error');
-    }
+    } catch (e) { showAlert('msgLogin', '⚠️ Servidor offline.', 'error'); }
 }
 
-async function fazerCadastro(nome, email, senha) {
-    const url = `${API_URL}/auth/register`; 
+async function registrarUsuario(nome, email, senha) {
     try {
-        const resposta = await fetch(url, {
+        const res = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome, email, senhaPura: senha, nivelAcesso: 'Comum' })
+            body: JSON.stringify({ nome, email, senha })
         });
-
-        const dados = await resposta.json();
-
-        if (resposta.ok) {
+        const dados = await res.json();
+        if (res.ok) {
             showAlert('msgReg', '✅ Cadastro realizado! Faça login.', 'success');
             setTimeout(() => { wrapper.classList.remove('active'); }, 2000);
         } else {
-            showAlert('msgReg', '❌ Erro: ' + dados.erro, 'error');
+            showAlert('msgReg', '❌ ' + (dados.erro || 'Erro no cadastro.'), 'error');
         }
-    } catch (erro) {
-        console.error("Erro no cadastro:", erro);
-        showAlert('msgReg', '⚠️ Erro ao conectar ao servidor.', 'error');
-    }
+    } catch (e) { showAlert('msgReg', '⚠️ Erro de conexão.', 'error'); }
 }
 
-// ----------------------------------------------------
-// 3. VÍNCULO DOS FORMULÁRIOS
-// ----------------------------------------------------
+async function esqueciSenha(email) {
+    try {
+        const res = await fetch(`${API_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const dados = await res.json();
+        if (res.ok) {
+            showAlert('msgForgot', '✅ Instruções enviadas!', 'success');
+        } else {
+            showAlert('msgForgot', '❌ ' + (dados.erro || 'E-mail não encontrado.'), 'error');
+        }
+    } catch (e) { showAlert('msgForgot', '⚠️ Servidor offline.', 'error'); }
+}
+
+// --- VÍNCULO COM OS FORMULÁRIOS (SUBMITS) ---
 document.addEventListener('DOMContentLoaded', () => {
     const formLogin = document.getElementById('loginForm');
-    const formRegistro = document.getElementById('registerForm');
+    const formForgot = document.getElementById('forgotForm');
+    const formReg = document.getElementById('registerForm');
 
     if (formLogin) {
-        formLogin.addEventListener('submit', (e) => {
+        formLogin.onsubmit = (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value; 
-            const senha = document.getElementById('loginPassword').value; 
-            fazerLogin(email, senha);
-        });
+            fazerLogin(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+        };
     }
-
-    if (formRegistro) {
-        formRegistro.addEventListener('submit', (e) => {
+    if (formForgot) {
+        formForgot.onsubmit = (e) => {
             e.preventDefault();
-            const nome = document.getElementById('regUsername').value; 
-            const email = document.getElementById('regEmail').value; 
-            const senha = document.getElementById('regPassword').value; 
-            fazerCadastro(nome, email, senha);
-        });
+            esqueciSenha(document.getElementById('forgotEmail').value);
+        };
+    }
+    if (formReg) {
+        formReg.onsubmit = (e) => {
+            e.preventDefault();
+            registrarUsuario(
+                document.getElementById('regUsername').value,
+                document.getElementById('regEmail').value,
+                document.getElementById('regPassword').value
+            );
+        };
     }
 });

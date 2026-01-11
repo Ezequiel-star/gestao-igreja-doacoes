@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Principal - Igreja Gestão</title>
+
+    <script>
+        (function() {
+            const token = localStorage.getItem('jwtToken');
+            if (!token) {
+                // Se não houver token, redireciona imediatamente
+                alert("Acesso restrito! Por favor, faça login.");
+                window.location.href = "login3.html";
+            }
+        })();
+    </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -40,7 +52,7 @@
 
         .btn-sair { 
             margin-top: 30px; display: inline-block; color: #ff4d4d; 
-            text-decoration: none; font-size: 0.8em; font-weight: 600;
+            text-decoration: none; font-size: 0.8em; font-weight: 600; cursor: pointer;
         }
     </style>
 </head>
@@ -52,14 +64,19 @@
         <div class="menu-grid">
             <a href="gerenciar_familias.html" class="btn-menu">👥 Famílias</a>
             <a href="fazer_doacao.html" class="btn-menu">🎁 Registrar Doação</a>
-            
             <a href="consultar_doacoes.html" class="btn-menu">📊 Consultar Estoque</a>
-            
             <a href="entregas.html" class="btn-menu">🚚 Entregas</a>
         </div>
 
-        <a href="login3.html" class="btn-sair" onclick="localStorage.clear()">Sair do Sistema</a>
+        <a href="login3.html" class="btn-sair" onclick="logout()">Sair do Sistema</a>
     </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('jwtToken'); // Remove apenas o token de acesso
+            window.location.href = "login3.html";
+        }
+    </script>
 
 </body>
 </html>

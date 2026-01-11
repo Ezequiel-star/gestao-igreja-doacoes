@@ -2,14 +2,16 @@ const express = require('express');
 const router = express.Router();
 const { checkAuth } = require('../middlewares/authMiddleware');
 
+const authController = require('../controllers/authController');
 const doacaoController = require('../controllers/doacaoController');
 const entregaController = require('../controllers/entregaController');
 const beneficiarioController = require('../controllers/beneficiarioController');
-const voluntarioController = require('../controllers/voluntarioController');
 
-// --- AUTH ---
-router.post('/auth/login', voluntarioController.login);
-router.post('/auth/register', voluntarioController.registrar);
+// --- AUTENTICAÇÃO ---
+router.post('/auth/login', authController.login);
+router.post('/auth/register', authController.register);
+router.post('/auth/forgot-password', authController.forgotPassword); 
+router.post('/auth/reset-password', authController.resetPassword);
 
 // --- ENTREGAS ---
 router.get('/entrega/listar', entregaController.listarEntregaController);

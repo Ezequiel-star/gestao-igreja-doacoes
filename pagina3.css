@@ -1,266 +1,67 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
-    font-family: 'Poppins', sans-serif; 
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
 body {
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    min-height: 100vh;
+    display: flex; justify-content: center; align-items: center; min-height: 100vh;
     background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('imagen/cruz 2.jpg') no-repeat;
-    background-size: cover; 
-    background-position: center;
+    background-size: cover; background-position: center;
 }
 
 header {
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    padding: 20px 100px;
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    z-index: 99;
+    position: fixed; top: 0; left: 0; width: 100%; padding: 20px 100px;
+    display: flex; justify-content: space-between; align-items: center; z-index: 99;
 }
 
-.logo { 
-    font-size: 2em; 
-    color: #fff; 
-    user-select: none; 
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5); 
+.logo { font-size: 2em; color: #fff; }
+
+.navigation .btnLogin-popup {
+    width: 130px; height: 50px; background: transparent; border: 2px solid #fff;
+    outline: none; border-radius: 6px; cursor: pointer; font-size: 1.1em;
+    color: #fff; font-weight: 500; margin-left: 40px; transition: .5s;
 }
 
-.btnLogin-popup {
-    width: 130px; 
-    height: 50px; 
-    background: transparent; 
-    border: 2px solid #fff;
-    border-radius: 6px; 
-    cursor: pointer; 
-    font-size: 1.1em; 
-    color: #fff; 
-    font-weight: 500; 
-    transition: .5s;
-}
-
-.btnLogin-popup:hover { 
-    background: #fff; 
-    color: #162938; 
-}
+.navigation .btnLogin-popup:hover { background: #fff; color: #162938; }
 
 .wrapper {
-    position: relative; 
-    width: 400px; 
-    height: 440px;
-    background: rgba(255, 255, 255, 0.1); 
-    border: 2px solid rgba(255, 255, 255, .5);
-    border-radius: 20px; 
-    backdrop-filter: blur(15px); 
-    box-shadow: 0 0 30px rgba(0, 0, 0, .5);
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    overflow: hidden;
-    transform: scale(0); 
-    transition: transform .5s ease, height .2s ease;
+    position: relative; width: 400px; height: 440px;
+    background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, .5);
+    border-radius: 20px; backdrop-filter: blur(20px); box-shadow: 0 0 30px rgba(0, 0, 0, .5);
+    display: flex; justify-content: center; align-items: center; overflow: hidden;
+    transform: scale(0); /* Começa invisível até clicar em Acessar */
+    transition: transform .5s ease, height .3s ease;
 }
 
-.wrapper.active-popup { 
-    transform: scale(1); 
+/* Quando clicar em ACESSAR o wrapper aparece */
+.wrapper.active-popup { transform: scale(1); }
+.wrapper.active-forgot { height: 480px; }
+
+/* --- ESTILO DO ÍCONE DE FECHAR (O X) --- */
+.icon-close {
+    position: absolute; top: 0; right: 0; width: 45px; height: 45px;
+    background: #162938; font-size: 2em; color: #fff;
+    display: flex; justify-content: center; align-items: center;
+    border-bottom-left-radius: 20px; cursor: pointer; z-index: 1;
 }
 
-.wrapper.active { 
-    height: 560px; 
-} 
+.form-box { width: 100%; padding: 40px; transition: transform .18s ease; }
+.form-box.forgot { position: absolute; transform: translateX(400px); }
+.wrapper.active-forgot .form-box.login { transform: translateX(-400px); }
+.wrapper.active-forgot .form-box.forgot { transform: translateX(0); }
 
-.wrapper.active-forgot { 
-    height: 420px; 
-}
+.form-box h2 { font-size: 2em; color: #fff; text-align: center; }
 
-.wrapper .icon-close {
-    position: absolute; 
-    top: 0; 
-    right: 0; 
-    width: 45px; 
-    height: 45px;
-    background: #162938; 
-    color: #fff; 
-    font-size: 2em;
-    display: flex; 
-    justify-content: center; 
-    align-items: center;
-    border-bottom-left-radius: 20px; 
-    cursor: pointer; 
-    z-index: 1;
-}
+.input-box { position: relative; width: 100%; height: 50px; border-bottom: 2px solid #fff; margin: 30px 0; }
+.input-box .icon { position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: #fff; font-size: 1.2em; }
+.input-box label { position: absolute; top: 50%; left: 35px; transform: translateY(-50%); color: #fff; font-weight: 500; pointer-events: none; transition: .5s; }
+.input-box input:focus~label, .input-box input:valid~label { top: -5px; left: 5px; font-size: 0.9em; }
+.input-box input { width: 100%; height: 100%; background: transparent; border: none; outline: none; font-size: 1em; color: #fff; padding: 0 35px 0 35px; }
 
-.form-box { 
-    width: 100%; 
-    padding: 40px; 
-    transition: transform .18s ease; 
-}
+.btn { width: 100%; height: 45px; background: #fff; border: none; border-radius: 6px; cursor: pointer; color: #162938; font-weight: 600; }
 
-.form-box.register, 
-.form-box.forgot { 
-    position: absolute; 
-    transform: translateX(400px); 
-}
+.alert-msg.alert-success { display: flex !important; background: #4caf50; color: #fff; padding: 10px; border-radius: 8px; margin-top: 15px; justify-content: center; }
 
-.wrapper.active .form-box.login { 
-    transform: translateX(-400px); 
-}
-
-.wrapper.active .form-box.register { 
-    transform: translateX(0); 
-}
-
-.wrapper.active-forgot .form-box.login { 
-    transform: translateX(-400px); 
-}
-
-.wrapper.active-forgot .form-box.forgot { 
-    transform: translateX(0); 
-}
-
-.form-box h2 { 
-    font-size: 2em; 
-    color: #fff; 
-    text-align: center; 
-}
-
-/* --- CAIXA DE INPUT E ÍCONES --- */
-.input-box { 
-    position: relative; 
-    width: 100%; 
-    height: 50px; 
-    border-bottom: 2px solid #fff; 
-    margin: 30px 0; 
-}
-
-.input-box label { 
-    position: absolute; 
-    top: 50%; 
-    left: 5px; 
-    transform: translateY(-50%); 
-    color: #fff; 
-    transition: .5s; 
-    pointer-events: none; 
-}
-
-/* Fix para Label subir quando o campo for um Select ou estiver preenchido */
-.input-box input:focus~label, 
-.input-box input:valid~label,
-.input-box select~label { 
-    top: -5px; 
-    font-size: 0.9em;
-}
-
-.input-box input,
-.input-box select { 
-    width: 100%; 
-    height: 100%; 
-    background: transparent; 
-    border: none; 
-    outline: none; 
-    color: #fff; 
-    padding: 0 65px 0 5px; 
-}
-
-/* Estilo para as opções do Dropdown aparecerem corretamente */
-.input-box select option {
-    background: #162938;
-    color: #fff;
-}
-
-/* Ícone fixo (Mail/Lock) - Ajustado verticalmente */
-.input-box .icon { 
-    position: absolute; 
-    right: 8px; 
-    top: 50%;
-    transform: translateY(-50%);
-    color: #fff; 
-    font-size: 1.2em;
-    display: flex;
-    align-items: center;
-}
-
-/* Ícone do Olho - Ajustado verticalmente */
-.icon-eye { 
-    position: absolute; 
-    right: 35px; 
-    top: 50%;
-    transform: translateY(-50%);
-    color: #fff; 
-    font-size: 1.2em; 
-    cursor: pointer; 
-    z-index: 2; 
-    display: flex;
-    align-items: center;
-}
-
-.remember-forgot { 
-    font-size: .9em; 
-    color: #fff; 
-    margin: -15px 0 15px; 
-    display: flex; 
-    justify-content: space-between; 
-}
-
-.remember-forgot a { 
-    color: #fff; 
-    text-decoration: none; 
-}
-
-.btn { 
-    width: 100%; 
-    height: 45px; 
-    background: #fff; 
-    border: none; 
-    border-radius: 6px; 
-    cursor: pointer; 
-    color: #162938; 
-    font-weight: 600; 
-}
-
-.alert-msg { 
-    margin-top: 10px; 
-    font-size: 0.85em; 
-    text-align: center; 
-    padding: 8px; 
-    border-radius: 4px; 
-    display: none; 
-    transition: 0.3s; 
-}
-
-.alert-success { 
-    display: block; 
-    background: rgba(40, 167, 69, 0.3); 
-    color: #87ffad; 
-    border: 1px solid #28a745; 
-}
-
-.alert-error { 
-    display: block; 
-    background: rgba(220, 53, 69, 0.3); 
-    color: #ff9b9b; 
-    border: 1px solid #ff4d4d; 
-}
-
-.login-register { 
-    font-size: .9em; 
-    color: #fff; 
-    text-align: center; 
-    margin: 25px 0 10px; 
-}
-
-.login-register p a { 
-    color: #fff; 
-    font-weight: 600; 
-    text-decoration: none; 
-}
+.remember-forgot { font-size: .9em; color: #fff; margin: -15px 0 15px; display: flex; justify-content: space-between; }
+.remember-forgot a, .login-register p a, .back-to-login { color: #fff; text-decoration: none; font-weight: 600; }
+.login-register { font-size: .9em; color: #fff; text-align: center; margin-top: 25px; }
+.back-to-login { display: block; text-align: center; margin-top: 15px; color: #fff; text-decoration: none; font-weight: 600; }
