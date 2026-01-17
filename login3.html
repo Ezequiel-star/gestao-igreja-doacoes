@@ -6,58 +6,43 @@
     <title>Ação Social - Gestão</title>
     <link rel="stylesheet" href="pagina3.css">
     <style>
-        /* --- BLOQUEADOR DE FUNDO BRANCO (AUTOFILL) --- */
-        input:-webkit-autofill {
-            -webkit-text-fill-color: #fff !important;
-            -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.1) inset !important;
-            transition: background-color 5000s ease-in-out 0s;
-        }
-
-        .input-box .btn-eye {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #fff;
-            cursor: pointer;
-            font-size: 1.2em;
-            z-index: 10;
-        }
-
-        .input-box input { padding: 0 40px 0 35px !important; }
-        .alert-msg { margin-top: 15px; text-align: center; font-weight: 600; font-size: 0.9em; }
+        /* CSS adicional para garantir funcionamento */
+        .alert-msg { margin-top: 15px; text-align: center; font-weight: 600; font-size: 0.9em; min-height: 20px; }
+        .alert-success { color: #87ffad; }
+        .alert-error { color: #ff4d4d; }
+        
+        /* Forçar o wrapper a sumir se não houver a classe active-popup */
+        .wrapper { transform: scale(0); display: flex !important; }
+        .wrapper.active-popup { transform: scale(1); }
     </style>
 </head>
 <body>
     <header>
         <h2 class="logo">Ação Social</h2>
         <nav class="navigation">
-            <button class="btnLogin-popup">Acessar</button>
+            <button class="btnLogin-popup" id="btnAcessar">Acessar</button>
         </nav>
     </header>
 
-    <div class="wrapper active-popup">
-        <span class="icon-close"><ion-icon name="close"></ion-icon></span>
+    <div class="wrapper" id="mainWrapper">
+        <span class="icon-close" id="btnClose"><ion-icon name="close"></ion-icon></span>
 
         <div class="form-box login">
             <h2>Login</h2>
             <form id="loginForm">
                 <div class="input-box">
                     <span class="icon"><ion-icon name="mail"></ion-icon></span>
-                    <input type="email" id="loginEmail" required autocomplete="new-password">
+                    <input type="email" id="loginEmail" required>
                     <label>E-mail</label>
                 </div>
                 <div class="input-box">
                     <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
-                    <input type="password" id="loginSenha" required>
+                    <input type="password" id="loginPassword" required>
                     <label>Senha</label>
-                    <span class="btn-eye" onclick="toggleSenha()">
-                        <ion-icon name="eye-outline" id="eyeIcon"></ion-icon>
-                    </span>
                 </div>
                 <div class="remember-forgot">
                     <label><input type="checkbox"> Lembrar</label>
-                    <a href="#" class="forgot-link">Esqueceu a senha?</a>
+                    <a href="#" class="forgot-link" id="linkForgot">Esqueceu a senha?</a>
                 </div>
                 <button type="submit" class="btn">Entrar</button>
                 <div id="msgLogin" class="alert-msg"></div>
@@ -74,82 +59,76 @@
                 </div>
                 <button type="submit" class="btn">Validar E-mail</button>
                 <div id="msgForgot" class="alert-msg"></div>
-                <a href="#" class="back-to-login">← Voltar ao Login</a>
+                <a href="#" class="back-to-login" id="linkBack">← Voltar ao Login</a>
             </form>
         </div>
     </div>
 
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
     <script>
-        function toggleSenha() {
-            const input = document.getElementById('loginSenha');
-            const icon = document.getElementById('eyeIcon');
-            input.type = input.type === 'password' ? 'text' : 'password';
-            icon.setAttribute('name', input.type === 'password' ? 'eye-outline' : 'eye-off-outline');
-        }
+        window.onload = function() {
+            const wrapper = document.getElementById('mainWrapper');
+            const btnAcessar = document.getElementById('btnAcessar');
+            const btnClose = document.getElementById('btnClose');
+            const linkForgot = document.getElementById('linkForgot');
+            const linkBack = document.getElementById('linkBack');
 
-        const wrapper = document.querySelector('.wrapper');
-        const forgotLink = document.querySelector('.forgot-link');
-        const backToLogin = document.querySelector('.back-to-login');
+            // 1. ABRIR POPUP
+            btnAcessar.onclick = function() {
+                wrapper.classList.add('active-popup');
+            };
 
-        forgotLink.onclick = () => wrapper.classList.add('active-forgot');
-        backToLogin.onclick = () => wrapper.classList.remove('active-forgot');
+            // 2. FECHAR POPUP
+            btnClose.onclick = function() {
+                wrapper.classList.remove('active-popup');
+                wrapper.classList.remove('active-forgot');
+            };
 
-        document.getElementById('loginForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const msgLogin = document.getElementById('msgLogin');
-            try {
-                const res = await fetch('https://gestao-igreja-doacoes.onrender.com/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        email: loginEmail.value, 
-                        senha: loginSenha.value 
-                    })
-                });
-                
-                const dados = await res.json();
-                
-                if (res.ok) {
-                    // SALVA O TOKEN PARA EVITAR O ERRO DE "ACESSO RESTRITO"
-                    localStorage.setItem('jwtToken', dados.token);
-                    msgLogin.style.color = "#87ffad";
-                    msgLogin.innerHTML = "✅ Login bem-sucedido!";
-                    setTimeout(() => location.href = "menuprincipal.html", 1000);
-                } else {
-                    msgLogin.style.color = "#ff4d4d";
-                    msgLogin.innerHTML = "❌ " + (dados.erro || "Falha no login");
+            // 3. IR PARA RECUPERAÇÃO
+            linkForgot.onclick = function(e) {
+                e.preventDefault();
+                wrapper.classList.add('active-forgot');
+            };
+
+            // 4. VOLTAR PARA LOGIN
+            linkBack.onclick = function(e) {
+                e.preventDefault();
+                wrapper.classList.remove('active-forgot');
+            };
+
+            // 5. LOGIN VIA API
+            document.getElementById('loginForm').onsubmit = async function(e) {
+                e.preventDefault();
+                const msg = document.getElementById('msgLogin');
+                const email = document.getElementById('loginEmail').value;
+                const senha = document.getElementById('loginPassword').value;
+
+                msg.style.color = "white";
+                msg.innerText = "Verificando...";
+
+                try {
+                    const res = await fetch('https://gestao-igreja-doacoes.onrender.com/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: email, senhaPura: senha })
+                    });
+                    const dados = await res.json();
+                    if (res.ok) {
+                        localStorage.setItem('jwtToken', dados.token);
+                        msg.className = "alert-msg alert-success";
+                        msg.innerText = "✅ Sucesso!";
+                        setTimeout(() => window.location.href = 'menuprincipal.html', 1000);
+                    } else {
+                        msg.className = "alert-msg alert-error";
+                        msg.innerText = "❌ " + (dados.erro || "Dados incorretos");
+                    }
+                } catch (err) {
+                    msg.className = "alert-msg alert-error";
+                    msg.innerText = "⚠️ Erro: Servidor Offline";
                 }
-            } catch (err) {
-                msgLogin.style.color = "#ff4d4d";
-                msgLogin.innerHTML = "❌ Servidor Offline";
-            }
-        };
-
-        // Recuperação - Salva o e-mail para a próxima tela
-        document.getElementById('forgotForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const msgForgot = document.getElementById('msgForgot');
-            try {
-                const res = await fetch('https://gestao-igreja-doacoes.onrender.com/api/auth/forgot-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: forgotEmail.value })
-                });
-                if (res.ok) {
-                    // Garante que o e-mail seja passado para redefinir_senha.html
-                    sessionStorage.setItem('emailReset', forgotEmail.value);
-                    msgForgot.style.color = "#87ffad";
-                    msgForgot.innerHTML = "✅ E-mail Validado!";
-                    setTimeout(() => location.href = "redefinir_senha.html", 1500);
-                } else {
-                    msgForgot.style.color = "#ff4d4d";
-                    msgForgot.innerHTML = "❌ E-mail não encontrado";
-                }
-            } catch (err) {
-                msgForgot.style.color = "#ff4d4d";
-                msgForgot.innerHTML = "❌ Erro de conexão";
-            }
+            };
         };
     </script>
 </body>

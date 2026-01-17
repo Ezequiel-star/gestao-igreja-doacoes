@@ -1,144 +1,91 @@
-const wrapper = document.querySelector('.wrapper');
-const loginLink = document.querySelector('.login-link');
-const registerLink = document.querySelector('.register-link');
-const forgotLink = document.querySelector('.forgot-link');
-const backToLogin = document.querySelector('.back-to-login');
-const btnPopup = document.querySelector('.btnLogin-popup');
-const iconClose = document.querySelector('.icon-close');
-
-// DICA: Se estiver testando no PC, use 'https://gestao-igreja-doacoes.onrender.com/api' 
-// Se for para publicar, use a do Render.
-const API_URL = 'https://gestao-igreja-doacoes.onrender.com/api'; 
-
-// --- NAVEGAÇÃO ---
-if (registerLink) {
-    registerLink.onclick = () => {
-        wrapper.classList.remove('active-forgot');
-        wrapper.classList.add('active');
-    };
-}
-if (loginLink) {
-    loginLink.onclick = () => wrapper.classList.remove('active');
-}
-if (forgotLink) {
-    forgotLink.onclick = (e) => {
-        e.preventDefault();
-        wrapper.classList.remove('active');
-        wrapper.classList.add('active-forgot');
-    };
-}
-if (backToLogin) {
-    backToLogin.onclick = (e) => {
-        e.preventDefault();
-        wrapper.classList.remove('active-forgot');
-    };
-}
-if (btnPopup) {
-    btnPopup.onclick = () => wrapper.classList.add('active-popup');
-}
-if (iconClose) {
-    iconClose.onclick = () => {
-        wrapper.classList.remove('active-popup');
-        setTimeout(() => {
-            wrapper.classList.remove('active');
-            wrapper.classList.remove('active-forgot');
-        }, 500);
-    };
-}
-
-// --- FUNÇÕES DE ALERTA ---
-function showAlert(elementId, message, type) {
-    const alertDiv = document.getElementById(elementId);
-    if (!alertDiv) return;
-    alertDiv.innerText = message;
-    alertDiv.className = 'alert-msg ' + (type === 'success' ? 'alert-success' : 'alert-error');
-    
-    // Remove o alerta após 4 segundos
-    setTimeout(() => { 
-        alertDiv.className = 'alert-msg'; 
-        alertDiv.innerText = '';
-    }, 4000);
-}
-
-// --- CHAMADAS À API ---
-
-async function fazerLogin(email, senha) {
-    try {
-        const res = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, senhaPura: senha })
-        });
-        const dados = await res.json();
-        if (res.ok) {
-            localStorage.setItem('jwtToken', dados.token);
-            showAlert('msgLogin', '✅ Login realizado!', 'success');
-            setTimeout(() => { window.location.href = 'menuprincipal.html'; }, 1000);
-        } else {
-            showAlert('msgLogin', '❌ ' + (dados.erro || 'Erro no login.'), 'error');
-        }
-    } catch (e) { showAlert('msgLogin', '⚠️ Servidor offline.', 'error'); }
-}
-
-async function registrarUsuario(nome, email, senha) {
-    try {
-        const res = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome, email, senha })
-        });
-        const dados = await res.json();
-        if (res.ok) {
-            showAlert('msgReg', '✅ Cadastro realizado! Faça login.', 'success');
-            setTimeout(() => { wrapper.classList.remove('active'); }, 2000);
-        } else {
-            showAlert('msgReg', '❌ ' + (dados.erro || 'Erro no cadastro.'), 'error');
-        }
-    } catch (e) { showAlert('msgReg', '⚠️ Erro de conexão.', 'error'); }
-}
-
-async function esqueciSenha(email) {
-    try {
-        const res = await fetch(`${API_URL}/auth/forgot-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-        });
-        const dados = await res.json();
-        if (res.ok) {
-            showAlert('msgForgot', '✅ Instruções enviadas!', 'success');
-        } else {
-            showAlert('msgForgot', '❌ ' + (dados.erro || 'E-mail não encontrado.'), 'error');
-        }
-    } catch (e) { showAlert('msgForgot', '⚠️ Servidor offline.', 'error'); }
-}
-
-// --- VÍNCULO COM OS FORMULÁRIOS (SUBMITS) ---
+// Aguarda o carregamento completo do DOM
 document.addEventListener('DOMContentLoaded', () => {
-    const formLogin = document.getElementById('loginForm');
-    const formForgot = document.getElementById('forgotForm');
-    const formReg = document.getElementById('registerForm');
+    const wrapper = document.querySelector('.wrapper');
+    const btnPopup = document.querySelector('.btnLogin-popup');
+    const iconClose = document.querySelector('.icon-close');
+    const forgotLink = document.querySelector('.forgot-link');
+    const backToLogin = document.querySelector('.back-to-login');
 
-    if (formLogin) {
-        formLogin.onsubmit = (e) => {
-            e.preventDefault();
-            fazerLogin(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
-        };
+    // URL da tua API no Render
+    const API_URL = 'https://gestao-igreja-doacoes.onrender.com/api';
+
+    // 1. FUNÇÃO PARA ABRIR O FORMULÁRIO (BOTÃO ACESSAR)
+    if (btnPopup) {
+        btnPopup.addEventListener('click', () => {
+            console.log("Botão Acessar clicado!"); // Debug no console
+            wrapper.classList.add('active-popup');
+        });
     }
-    if (formForgot) {
-        formForgot.onsubmit = (e) => {
-            e.preventDefault();
-            esqueciSenha(document.getElementById('forgotEmail').value);
-        };
+
+    // 2. FUNÇÃO PARA FECHAR O FORMULÁRIO (O X)
+    if (iconClose) {
+        iconClose.addEventListener('click', () => {
+            wrapper.classList.remove('active-popup');
+            wrapper.classList.remove('active-forgot');
+        });
     }
-    if (formReg) {
-        formReg.onsubmit = (e) => {
+
+    // 3. NAVEGAÇÃO ENTRE LOGIN E RECUPERAÇÃO
+    if (forgotLink) {
+        forgotLink.addEventListener('click', (e) => {
             e.preventDefault();
-            registrarUsuario(
-                document.getElementById('regUsername').value,
-                document.getElementById('regEmail').value,
-                document.getElementById('regPassword').value
-            );
+            wrapper.classList.add('active-forgot');
+        });
+    }
+
+    if (backToLogin) {
+        backToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            wrapper.classList.remove('active-forgot');
+        });
+    }
+
+    // 4. LÓGICA DE LOGIN (A QUE ESTAVA A FALHAR)
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            // Captura os elementos de mensagem e inputs
+            const msgLogin = document.getElementById('msgLogin');
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('loginPassword');
+
+            // Feedback visual de carregamento
+            msgLogin.style.color = "#fff";
+            msgLogin.innerText = "A verificar dados...";
+
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: emailInput.value, 
+                        senhaPura: passwordInput.value 
+                    })
+                });
+
+                const dados = await res.json();
+
+                if (res.ok) {
+                    // Guarda o token JWT
+                    localStorage.setItem('jwtToken', dados.token);
+                    msgLogin.style.color = "#87ffad";
+                    msgLogin.innerText = "✅ Login bem-sucedido!";
+                    
+                    // Redireciona após 1 segundo
+                    setTimeout(() => {
+                        window.location.href = 'menuprincipal.html';
+                    }, 1000);
+                } else {
+                    msgLogin.style.color = "#ff4d4d";
+                    msgLogin.innerText = "❌ " + (dados.erro || "E-mail ou senha incorretos");
+                }
+            } catch (err) {
+                console.error("Erro na requisição:", err);
+                msgLogin.style.color = "#ff4d4d";
+                msgLogin.innerText = "⚠️ Erro: Servidor Offline";
+            }
         };
     }
 });

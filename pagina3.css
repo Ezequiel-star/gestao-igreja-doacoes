@@ -17,8 +17,7 @@ header {
 
 .navigation .btnLogin-popup {
     width: 130px; height: 50px; background: transparent; border: 2px solid #fff;
-    outline: none; border-radius: 6px; cursor: pointer; font-size: 1.1em;
-    color: #fff; font-weight: 500; margin-left: 40px; transition: .5s;
+    border-radius: 6px; cursor: pointer; font-size: 1.1em; color: #fff; transition: .5s;
 }
 
 .navigation .btnLogin-popup:hover { background: #fff; color: #162938; }
@@ -26,22 +25,22 @@ header {
 .wrapper {
     position: relative; width: 400px; height: 440px;
     background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, .5);
-    border-radius: 20px; backdrop-filter: blur(20px); box-shadow: 0 0 30px rgba(0, 0, 0, .5);
+    border-radius: 20px; backdrop-filter: blur(20px);
     display: flex; justify-content: center; align-items: center; overflow: hidden;
-    transform: scale(0); /* Começa invisível até clicar em Acessar */
+    transform: scale(0); /* ESTADO INICIAL: ESCONDIDO */
     transition: transform .5s ease, height .3s ease;
+    z-index: 100;
 }
 
-/* Quando clicar em ACESSAR o wrapper aparece */
+/* ESTADO QUANDO ATIVO */
 .wrapper.active-popup { transform: scale(1); }
 .wrapper.active-forgot { height: 480px; }
 
-/* --- ESTILO DO ÍCONE DE FECHAR (O X) --- */
 .icon-close {
     position: absolute; top: 0; right: 0; width: 45px; height: 45px;
     background: #162938; font-size: 2em; color: #fff;
     display: flex; justify-content: center; align-items: center;
-    border-bottom-left-radius: 20px; cursor: pointer; z-index: 1;
+    border-bottom-left-radius: 20px; cursor: pointer; z-index: 101;
 }
 
 .form-box { width: 100%; padding: 40px; transition: transform .18s ease; }
@@ -52,16 +51,12 @@ header {
 .form-box h2 { font-size: 2em; color: #fff; text-align: center; }
 
 .input-box { position: relative; width: 100%; height: 50px; border-bottom: 2px solid #fff; margin: 30px 0; }
-.input-box .icon { position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: #fff; font-size: 1.2em; }
-.input-box label { position: absolute; top: 50%; left: 35px; transform: translateY(-50%); color: #fff; font-weight: 500; pointer-events: none; transition: .5s; }
+.input-box .icon { position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: #fff; }
+.input-box label { position: absolute; top: 50%; left: 35px; transform: translateY(-50%); color: #fff; transition: .5s; }
 .input-box input:focus~label, .input-box input:valid~label { top: -5px; left: 5px; font-size: 0.9em; }
-.input-box input { width: 100%; height: 100%; background: transparent; border: none; outline: none; font-size: 1em; color: #fff; padding: 0 35px 0 35px; }
+.input-box input { width: 100%; height: 100%; background: transparent; border: none; outline: none; color: #fff; padding: 0 35px; }
 
 .btn { width: 100%; height: 45px; background: #fff; border: none; border-radius: 6px; cursor: pointer; color: #162938; font-weight: 600; }
-
-.alert-msg.alert-success { display: flex !important; background: #4caf50; color: #fff; padding: 10px; border-radius: 8px; margin-top: 15px; justify-content: center; }
-
 .remember-forgot { font-size: .9em; color: #fff; margin: -15px 0 15px; display: flex; justify-content: space-between; }
-.remember-forgot a, .login-register p a, .back-to-login { color: #fff; text-decoration: none; font-weight: 600; }
-.login-register { font-size: .9em; color: #fff; text-align: center; margin-top: 25px; }
-.back-to-login { display: block; text-align: center; margin-top: 15px; color: #fff; text-decoration: none; font-weight: 600; }
+.remember-forgot a, .back-to-login { color: #fff; text-decoration: none; font-weight: 600; }
+.back-to-login { display: block; text-align: center; margin-top: 15px; }
